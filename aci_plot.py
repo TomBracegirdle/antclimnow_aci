@@ -1,4 +1,22 @@
-import iris  # Written for Iris version 2.4.0. 
+"""
+A script to process input data and create time series graphics for the AntClimNow Antarctic Climate Indicators project (see https://scar.org/science/research-programmes/antclimnow/climate-indicators).
+Authors: Tom Bracegirdle, ...
+Email: tjbra@bas.ac.uk
+Date: 12 December 2024
+
+The code has been developed and tested in a conda environment running Python v3.10 with the following packages installed:
+ipython, ipykernel, iris (v3.11), nc-time-axis, netcdf4, pandas, scipy, seaborn and xarray
+
+The script requires three arguments: 
+diag_name [currently accepted options are: JSI_sh_ERA5', 'JLI_sh_ERA5', 'SMB_MARv3.12', 'SMB_HIRHAM5', 'SMB_all', 'zw3index_SH_mag_ERA5', 'zw3index_SH_phase_ERA5', 'U_10hPa_55-65S', 'Ross_gyre', 'Weddell_gyre', 'ACC_transport', 'blockingP90_150–90W', 'AR_eant_IWV', 'AR_eant_IVT', 'AR_want_IWV', 'AR_want_IVT' and 'SAM_marshall']
+mean_period [currently accepted options are 'monthly' or 'seasonal']
+update_data ['1' to update and '0' to not update]
+
+An example of running the script in ipython: 
+In [1]: run aci_plot.py 'SAM_marshall' 'monthly' 0
+
+"""
+import iris  
 import iris.plot as iplt
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,24 +38,6 @@ import pandas as pd
 import xarray as xr
 import seaborn as sns
 
-#from matplotlib.ticker import AutoMinorLocator, MultipleLocator
-
-### Plot time series of AntClimNow Antarctic Climate Indicators (ACIs)
-### Input: Two arguments, indicator name (e.g. SAM_marshall) and season ('djf', 'mam', 'jja' or 'son'). 
-### 
-### Files required: 
-### 1. AntClimNow logo (AntClimNow_logo_15cm_300dpi.png)
-### 2. Input data files for each ACI. 
-###
-### Example: run aci_monthly_plot_v2_0.py 'SAM_marshall' 'djf'
-###
-### Author: Tom Bracegirdle (tjbra@bas.ac.uk)
-### Date: 31 May 2023
-###
-### Notes: Requires data files to be in a directory 't_srs'. The code is written to handle 
-### the differing formats of the different datasets. 
-###       
-
 ### --------- Definitions ------------
 
 def yrange_calc(cube):
@@ -47,7 +47,7 @@ def yrange_calc(cube):
   y_range = [d_min - ylim_buffer, d_max+ylim_buffer]
   return y_range
 
-def season_agg(cube, seasons=None, sea_agg_calc=None):
+def season_agg(cube, seasons=None, sea_agg_type=None):
     ### Create seasonal means (unique and specified 3-month seasons)
   if (seasons == None): 
         seasons=['mam', 'jja', 'son', 'djf']
@@ -70,8 +70,8 @@ def season_agg(cube, seasons=None, sea_agg_calc=None):
     if (len(ind) == n_months_in_season): keep_ind = np.append(keep_ind,i)
 
   cube = cube[keep_ind]
-  if (sea_agg_calc == 'mean'): cube_out = cube.aggregated_by(['clim_season', 'season_year'], iris.analysis.MEAN)
-  if (sea_agg_calc == 'total'): cube_out = cube.aggregated_by(['clim_season', 'season_year'], iris.analysis.SUM)
+  if (sea_agg_type == 'mean'): cube_out = cube.aggregated_by(['clim_season', 'season_year'], iris.analysis.MEAN)
+  if (sea_agg_type == 'total'): cube_out = cube.aggregated_by(['clim_season', 'season_year'], iris.analysis.SUM)
   return cube_out
 
 
@@ -140,25 +140,16 @@ def low_pass_weights(window, cutoff):
 diag_name = sys.argv[1]
 mean_period = sys.argv[2]
 update_data = float(sys.argv[3])
-sea_agg_calc_in = sys.argv[4]
 
 aci_version_num = '1.0'
 aci_version = 'ACI beta v'+aci_version_num
 nsource = 1 ## default number of data sources is one
 plt_date = '20240612'
 
-#season = np.array(['mam', 'jja', 'son', 'djf'])
-#ii_sea = np.where(season_tit_arr == season)
-#season_tit_arr = np.array(['MAM', 'JJA', 'SON', 'DJF'])
-#season_tit = season_tit_arr[ii_sea][0]
-
-### Read in  time series, with re-formatting as necessary. 
-#vn='20230203' # version in date format YYYYMMDD
-#vn='20230113'
-#vn='20230216'
 
 if diag_name == 'JSI_sh_ERA5': 
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'mean'
   vn='20240607'
   fname = diag_name+'_monthly_'+vn+'.nc'
   diag_plt = iris.cube.CubeList()
@@ -171,7 +162,8 @@ if diag_name == 'JSI_sh_ERA5':
   diag_plt[0]=diag_plt[0].extract(iris.Constraint(year = range(1979,yrs_max+1)))
 
 if diag_name == 'JLI_sh_ERA5': 
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'mean'
   vn='20240607'
   fname = diag_name+'_monthly_'+vn+'.nc'
   diag_plt = iris.cube.CubeList()  
@@ -184,7 +176,8 @@ if diag_name == 'JLI_sh_ERA5':
   diag_plt[0]=diag_plt[0].extract(iris.Constraint(year = range(1979,yrs_max+1)))
 
 if diag_name == 'SMB_MARv3.12':
-  seasonal_agg_calc=1
+  sea_agg_calc=1
+  sea_agg_type_in = 'mean'
   vn='20230113'
   #fname = diag_name+'_'+season+'_'+vn+'.nc'
   fname = diag_name+'_mon_'+vn+'.nc'
@@ -199,7 +192,8 @@ if diag_name == 'SMB_MARv3.12':
   ylab_units = 'SMB (Gt)'
   
 if diag_name == 'SMB_HIRHAM5':
-  seasonal_agg_calc=1
+  sea_agg_calc=1
+  sea_agg_type_in = 'mean'
   vn='20240306'
   if update_data == 1:
     datadirModel=os.path.join('t_srs/SMB/HIRHAM5/SMBdata2Tom_MM/')
@@ -246,7 +240,8 @@ if diag_name == 'SMB_HIRHAM5':
   diag_plt[0]=diag_plt[0].extract(iris.Constraint(year = range(1979,yrs_max+1)))
 
 if diag_name == 'SMB_all':
-  seasonal_agg_calc=1
+  sea_agg_calc=1
+  sea_agg_type_in = 'mean'
   nsource = 2
   vn_HIRHAM = '20240306'
   vn_MAR = '20230113'
@@ -268,9 +263,10 @@ if diag_name == 'SMB_all':
   ylab_units = 'SMB (Gt)'
 
 if diag_name == 'zw3index_SH_mag_ERA5':
+  sea_agg_type_in = 'mean'
   vn='20230216'
   nsource = 1
-  seasonal_agg_calc = 2
+  sea_agg_calc = 2
   #if season == 'djf': month = 'Jan'
   #if season == 'jja': month = 'Jul'
   #fname = diag_name+'_'+month+'_'+vn+'.nc'
@@ -292,9 +288,10 @@ if diag_name == 'zw3index_SH_mag_ERA5':
   ylab_units = 'ZW3 Magnitude'
   
 if diag_name == 'zw3index_SH_phase_ERA5':
+  sea_agg_type_in = 'mean'
   vn='20230216'
   nsource = 1
-  seasonal_agg_calc = 2
+  sea_agg_calc = 2
   #if season == 'djf': month = 'Jan'
   #if season == 'jja': month = 'Jul'
   #fname = diag_name+'_'+month+'_'+vn+'.nc'
@@ -319,7 +316,7 @@ if diag_name == 'zw3index_SH_phase_ERA5':
 if diag_name == 'U_10hPa_55-65S':
   vn = '20230113'
   nsource = 1
-  seasonal_agg_calc = 0
+  sea_agg_calc = 0
   fname_csv = 'PolarVortexStrength_son_SH_AntClimNow_post1979.csv'
   fname = diag_name+'_son_'+vn+'.nc'
   pvtx_in=np.genfromtxt('t_srs/pvortex/'+fname_csv, delimiter=',',skip_header=1)
@@ -359,7 +356,8 @@ if diag_name == 'U_10hPa_55-65S':
 if (diag_name == 'Ross_gyre') | (diag_name == 'Weddell_gyre') | (diag_name == 'ACC_transport'):
   vn = '20240322'
   nsource = 1
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'mean'
   fname_csv = 'AntClimNow_Ocean_ACI.csv'
   fname = diag_name+'_monthly_'+vn+'.nc'  
   if update_data == 1:
@@ -384,7 +382,8 @@ if diag_name == 'blockingP90_150–90W':
   nsource = 1
   iris.coord_categorisation.add_year(diag_in[0], 'time', 'year')
   iris.coord_categorisation.add_month_number(diag_in[0], 'time', 'month_number')
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'total'
   fname = diag_name+'_50–70S_ERA5_anndays_'+vn+'.nc'  
   ncvarname = 'blocking_P90_150-90W'
   nctitle = 'blocking_days_P90_150-90W'
@@ -404,7 +403,8 @@ if diag_name == 'blockingP90_150–90W':
 if diag_name == 'AR_eant_IWV':
   vn = '20230716'
   nsource = 1
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'total'
   fname_csv = 'east_ant_ARs_lons_IWV_80-22.csv'
   fname = diag_name+'_ann_'+vn+'.nc'
   #AR_df = pd.read_csv('t_srs/ARs/'+fname_csv, dtype = np.float64, parse_dates=['time'])
@@ -468,7 +468,8 @@ if diag_name == 'AR_eant_IWV':
 if diag_name == 'AR_eant_IVT':
   vn = '20230716'
   nsource = 1
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'total'
   fname_csv = 'east_ant_ARs_lons_vIVT_80-22.csv'
   fname = diag_name+'_ann_'+vn+'.nc'
   AR_df = pd.read_csv('t_srs/ARs/'+fname_csv, dtype = np.float64, parse_dates=['time'])
@@ -527,7 +528,8 @@ if diag_name == 'AR_eant_IVT':
 if diag_name == 'AR_want_IWV':
   vn = '20230716'
   nsource = 1
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'total'
   fname_csv = 'west_ant_ARs_lons_IWV_80-22.csv'
   fname = diag_name+'_ann_'+vn+'.nc'
   AR_df=pd.read_csv('t_srs/ARs/'+fname_csv, parse_dates=['time'])
@@ -584,7 +586,8 @@ if diag_name == 'AR_want_IWV':
 if diag_name == 'AR_want_IVT':
   vn = '20230716'
   nsource = 1
-  seasonal_agg_calc = 1
+  sea_agg_calc = 1
+  sea_agg_type_in = 'total'
   fname_csv = 'west_ant_ARs_lons_vIVT_80-22.csv'
   fname = diag_name+'_ann_'+vn+'.nc'
   AR_df=pd.read_csv('t_srs/ARs/'+fname_csv, parse_dates=['time'])
@@ -644,7 +647,7 @@ if diag_name == 'AR_want_IVT':
 if diag_name == 'SAM_marshall':
   vn = '20240224'
   nsource = 1
-  seasonal_agg_calc = 0
+  sea_agg_calc = 0
   if mean_period == 'seasonal': 
     fname_txt = 't_srs/SAM/newsam.1957.2007.seas.txt'    
     col_arr=np.array(['ann', 'mam','jja', 'son', 'djf']) #array containing  column headings of input text file.  
@@ -793,9 +796,9 @@ diag_plt_season = iris.cube.CubeList()
 
 for i in range(0,nsource):
 ### Where necessary create seasonal aggregation
-  if seasonal_agg_calc == 2: diag_plt_season = diag_plt
-  if seasonal_agg_calc == 1: diag_plt_season.append(season_agg(diag_plt[i],sea_agg_calc = sea_agg_calc_in))        
-  if seasonal_agg_calc == 0: diag_plt_season.append(diag_plt[i])
+  if sea_agg_calc == 2: diag_plt_season = diag_plt
+  if sea_agg_calc == 1: diag_plt_season.append(season_agg(diag_plt[i],sea_agg_type = sea_agg_type_in))        
+  if sea_agg_calc == 0: diag_plt_season.append(diag_plt[i])
 
   ### Calculate monthly anomalies from climatology
 
@@ -941,7 +944,7 @@ if mean_period == 'seasonal':
   plt.axis('off')
   for i in range(0, nsource):
     for k in range(0,4):      
-      if seasonal_agg_calc == 2: 
+      if sea_agg_calc == 2: 
         diag_plt_xsea = diag_plt_season[k]
       else: 
         diag_plt_xsea = diag_plt_season[i].extract(iris.Constraint(clim_season=seasons_arr[k]))
