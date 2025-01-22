@@ -1,6 +1,6 @@
 """
 A script to process input data and create time series graphics for the AntClimNow Antarctic Climate Indicators project (see https://scar.org/science/research-programmes/antclimnow/climate-indicators).
-Authors: Tom Bracegirdle, ...
+Authors: Tom Bracegirdle, Tania Glazkova ...
 Email: tjbra@bas.ac.uk
 Date: 12 December 2024
 
@@ -146,6 +146,22 @@ aci_version = 'ACI beta v'+aci_version_num
 nsource = 1 ## default number of data sources is one
 plt_date = '20240612'
 
+if diag_name == 't2m_ERA5':
+  sea_agg_calc = 1
+  sea_agg_type_in = 'mean'
+  vn='20250121'
+  fname = diag_name+'_monthly_'+vn+'.nc'
+  diag_in = iris.load('t_srs/t2m/'+fname)
+  diag_plt = iris.cube.CubeList()
+  diag_plt.append(diag_in[0])
+  nmon_clim = 12
+  p_title = 'Antarctic continent surface air temperature'
+  source_lab = ['ERA5']
+  ylab_units = '$\degree$C'
+  iris.coord_categorisation.add_year(diag_plt[0],'time', 'year')
+  iris.coord_categorisation.add_month_number(diag_plt[0], 'time', 'month_number')
+  yrs_max = max(diag_plt[0].coord('year').points)
+  diag_plt[0]=diag_plt[0].extract(iris.Constraint(year = range(1979,yrs_max+1)))
 
 if diag_name == 'JSI_sh_ERA5': 
   sea_agg_calc = 1
