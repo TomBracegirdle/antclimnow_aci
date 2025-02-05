@@ -151,9 +151,9 @@ if diag_name == 't2m_ERA5':
   sea_agg_type_in = 'mean'
   vn='20250121'
   fname = diag_name+'_monthly_'+vn+'.nc'
-  diag_in = iris.load('t_srs/t2m/'+fname)
+  diag_in = iris.load_cube('t_srs/t2m/'+fname,'area_weighted_time_series')
   diag_plt = iris.cube.CubeList()
-  diag_plt.append(diag_in[0])
+  diag_plt.append(diag_in)
   nmon_clim = 12
   p_title = 'Antarctic continent surface air temperature'
   source_lab = ['ERA5']
@@ -837,7 +837,7 @@ color_dset_arr = ['lightblue', 'lightgreen']
 color_dset_arr_sm = ['darkblue', 'darkgreen']
 linestyle_dset_arr = ['solid', 'dashed']
 window = 25
-w_5yr = low_pass_weights(window, 1.0 / 24.0)
+w_5yr = low_pass_weights(window, 1.0 / 72.0)
 
 ############################ Monthly #####################
 if mean_period == 'monthly':    
@@ -857,7 +857,8 @@ if mean_period == 'monthly':
 
     ylim_diag = yrange_calc(diag_plt[i])
     if nmon_clim == 12:
-      diag_plt_sm = diag_plt[i].rolling_window('time', iris.analysis.SUM, len(w_5yr), weights=w_5yr)
+      #diag_plt_sm = diag_plt[i].rolling_window('time', iris.analysis.SUM, len(w_5yr), weights=w_5yr)
+      diag_plt_sm = diag_plt[i].rolling_window('time', iris.analysis.MEAN, 12)
       #linestyle='-', color = '#296e31', label = 'ERA5', linewidth = 0.8, alpha =0.8)
       #line1, = iplt.plot(diag_plt, color='#296e31', linewidth = 0.8, alpha = 0.8, label = source_lab)
     #  iplt.plot(diag_plt, color='#296e31', linewidth = 0.8, label = source_lab)
