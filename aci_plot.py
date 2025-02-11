@@ -134,18 +134,16 @@ def low_pass_weights(window, cutoff):
   return w[1:-1]
 
 
-#---Defininhs the y-axxis of the plots
-
 ### Arguments (diagnostics name, season months)
 diag_name = sys.argv[1]
 mean_period = sys.argv[2]
 update_data = float(sys.argv[3])
-
 aci_version_num = '1.0'
 aci_version = 'ACI beta v'+aci_version_num
 nsource = 1 ## default number of data sources is one
 plt_date = '20250210'
 
+### Read in time series data from input files
 if diag_name == 't2m_ERA5':
   sea_agg_calc = 1
   sea_agg_type_in = 'mean'
@@ -710,47 +708,6 @@ if diag_name == 'SAM_marshall':
       time[:] = times
       ncfile.close(); print('Dataset is closed!')  
 
-  #if mean_period == 'annual': 
-    #fname_txt = 't_srs/SAM/newsam.1957.2007.seas.txt'    
-    #col_arr=np.array(['ann', 'mam','jja', 'son', 'djf']) #array containing  column headings of input text file.  
-    #fname = 'aci_'+diag_name+'_'+mean_period+'_'+vn+'.nc'
-    #if update_data == 1:
-      #ncols = len(col_arr)+1
-      #sam_in = np.loadtxt(fname_txt, skiprows=2)
-      #sam_dat = sam_in[:,1]
-      #sam_yrs = sam_in[:,0]  
-      #sam_mon_yrs_arr = np.copy(sam_dat)      
-      #nyrs = len(sam_yrs)
-      #for i in range(0,nyrs): 
-        #sam_yrs_arr[i,:] = int(sam_yrs[i])
-        #sam_mon_yrs_ann[i,1] = [6] # central month of seasons
-      
-      #sam_tsrs = np.ndarray.flatten(sam_dat)
-      #yr_tsrs = np.ndarray.flatten(sam_yrs)
-      #ntims = len(sam_tsrs)
-    ##  ii=np.where(col_arr == season) # select the season of interest  
-      #try: ncfile.close()  # just to be safe, make sure dataset is not already open.
-      #except: pass
-      #ncfile = Dataset('t_srs/SAM/'+fname+'.nc',mode='w',format='NETCDF4_CLASSIC') 
-      ##print(ncfile)
-      #time_dim = ncfile.createDimension('time', None)
-      #ncfile.title='Marshall SAM index'
-      #time = ncfile.createVariable('time', np.float64, ('time',))
-      #time.units = 'hours since 1800-01-01'
-      #time.long_name = 'time'
-    ## Define a 3D variable to hold the data
-      #var = ncfile.createVariable('SAM',np.float64,('time')) # note: unlimited dimension is leftmost
-      #var.units = '' # no units
-      #var.standard_name = 'SAM' # this is a CF standard name
-      #var[:] = sam_tsrs
-      #dates = np.array([])
-      #for i in range(0,ntims): 
-        #dates=np.append(dates,dt.datetime(int(yr_tsrs[i]),int(mon_sea_tsrs[i]),15,0))  
-        
-      #times = date2num(dates, time.units)
-      #time[:] = times
-      #ncfile.close(); print('Dataset is closed!')  
-
   if mean_period == 'monthly':     
     fname_txt = 't_srs/SAM/newsam.1957.2007_202302.txt'    
     col_arr=np.array(['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']) #array containing  column headings of input text file.    
@@ -857,49 +814,28 @@ if mean_period == 'monthly':
 
     ylim_diag = yrange_calc(diag_plt[i])
     if nmon_clim == 12:
-      #diag_plt_sm = diag_plt[i].rolling_window('time', iris.analysis.SUM, len(w_5yr), weights=w_5yr)
       diag_plt_sm = diag_plt[i].rolling_window('time', iris.analysis.MEAN, 12)
-      #linestyle='-', color = '#296e31', label = 'ERA5', linewidth = 0.8, alpha =0.8)
-      #line1, = iplt.plot(diag_plt, color='#296e31', linewidth = 0.8, alpha = 0.8, label = source_lab)
-    #  iplt.plot(diag_plt, color='#296e31', linewidth = 0.8, label = source_lab)
       iplt.plot(diag_plt[i], color=color_dset_arr[i], linestyle = linestyle_dset_arr[i], linewidth = 0.8)
       iplt.plot(diag_plt_sm, color=color_dset_arr_sm[i], linestyle = linestyle_dset_arr[i], linewidth = 1.6, label = source_lab[i]+' (12-month running mean)')
       iris.save(diag_plt[i], 't_srs/data4figs/aci_'+diag_name+'_monthly_anom_v'+aci_version_num+'.nc')
       iris.save(diag_plt_sm, 't_srs/data4figs/aci_'+diag_name+'_sm_monthly_anom_v'+aci_version_num+'.nc')
     else:
       iplt.plot(diag_plt[i], color=color_dset_arr_sm[i], linestyle = linestyle_dset_arr[i], linewidth = 1.6, label = source_lab[i])
-      iris.save(diag_plt_xsea, 't_srs/data4figs/aci_'+diag_name+'_monthly_anom_v'+aci_version_num+'.nc')
-    
-  #  iplt.plot(diag_plt, linestyle='-', color = 'blue', linewidth = 0.8, alpha = 0.6)
-    
+      iris.save(diag_plt_xsea, 't_srs/data4figs/aci_'+diag_name+'_monthly_anom_v'+aci_version_num+'.nc')    
 
   xy = (.9, .1) # Annotation position (in axis fraction coordinates). 
   ax.plot(xy[0], xy[1])
-  # Annotate the 1st position with a text box ('Test 1')
   antclimnow_logo = plt.imread('plotting_info/AntClimNow_logo_15cm_300dpi.png')
   scar_logo = plt.imread('plotting_info/SCAR_logo_2018_white_background.png')
-  #nerc_logo = plt.imread('plotting_info/NERC_logo_black_no_background.png')
   bas_logo = plt.imread('plotting_info/bas-logo-default-transparent-256.png')
-  #acn_logobox = OffsetImage(antclimnow_logo, zoom = 0.02)
-  #scar_logobox = OffsetImage(scar_logo, zoom =0.027)
-  ##nerc_logobox = OffsetImage(nerc_logo, zoom = 0.05)
-  #bas_logobox = OffsetImage(bas_logo, zoom = 0.09)
-  #ab1 = AnnotationBbox(acn_logobox, (.85,1), xycoords = 'axes fraction', frameon= False)
-  #ab2 = AnnotationBbox(scar_logobox, (0.1,1), xycoords = 'axes fraction', frameon= False)
-  ##ab3 = AnnotationBbox(nerc_logobox, (.93,0.05), xycoords = 'axes fraction', frameon= False)
-  #ab4 = AnnotationBbox(bas_logobox, (.9,0.07), xycoords = 'axes fraction', frameon= False)
   acn_logobox = OffsetImage(antclimnow_logo, zoom = 0.015)
   scar_logobox = OffsetImage(scar_logo, zoom =0.016)
-  #nerc_logobox = OffsetImage(nerc_logo, zoom = 0.05)
   bas_logobox = OffsetImage(bas_logo, zoom = 0.07)
   ab1 = AnnotationBbox(acn_logobox, (.73,0.985), xycoords = 'axes fraction', frameon= False)
   ab2 = AnnotationBbox(scar_logobox, (.83,0.98), xycoords = 'axes fraction', frameon= False)
-  #ab3 = AnnotationBbox(nerc_logobox, (.93,0.05), xycoords = 'axes fraction', frameon= False)
   ab4 = AnnotationBbox(bas_logobox, (1,0.985), xycoords = 'axes fraction', frameon= False)
- 
   ax.add_artist(ab1)
   ax.add_artist(ab2)
-  #ax.add_artist(ab3)
   ax.add_artist(ab4)
   ax.set_ylim(ylim_diag)
   ax.set_xlabel('Year', size=10)
@@ -908,7 +844,6 @@ if mean_period == 'monthly':
   ax.xaxis.set_major_formatter(formatter)
   ax.set_ylabel('Monthly anomaly ('+ylab_units+')', size=10)
   ax.set_title(p_title+'\n ('+aci_version+')', size=10)
-  #ax.text(.1,.9, season, transform=ax.transAxes)
   ax.xaxis.set_tick_params(labelsize=8)
   ax.yaxis.set_tick_params(labelsize=8)
   ax.legend(fontsize=8, loc='lower left', frameon=False)
@@ -921,42 +856,29 @@ if mean_period == 'monthly':
     lyr[k+1].set_zorder(0+countl)
     countl=countl+1
   
-  #lyr[0].set_zorder(3)
-  #lyr[1].set_zorder(0)
-  #lyr[2].set_zorder(2)
-  #lyr[3].set_zorder(1)
-  #lyr[4]
-  #lyr[5]
-  #plt.show() 
   fname_plt = 'aci_'+diag_name+'_monthly_anom_v'+aci_version_num+'_'+plt_date
   plt.savefig('plots/'+fname_plt+'.png')
   plt.close()
 
 ######################### Seasonal ################################ 
 if mean_period == 'seasonal': 
-#  diag_plt_seaclim=diag_plt_season.aggregated_by('clim_season', iris.analysis.MEAN)
   seasons_arr = ['djf','mam','jja','son']
   seasons_arr_plt = ['DJF','MAM','JJA','SON']
   seasons_colr = ['darkorange', '#008a82', '#1f5b74', '#67b050']
   plt.figure(figsize=(8, 6), dpi=600)  
-  #fig, ax = plt.subplots(figsize = (5,12), dpi = 300)
   seas_names = {'djf':'Summer', 'mam':'Autumn', 'jja':'Winter', 'son':'Spring'}
   ax=plt.gca()
   antclimnow_logo = plt.imread('plotting_info/AntClimNow_logo_15cm_300dpi.png')
   scar_logo = plt.imread('plotting_info/SCAR_logo_2018_white_background.png')
-  #nerc_logo = plt.imread('plotting_info/NERC_logo_black_no_background.png')
   bas_logo = plt.imread('plotting_info/bas-logo-default-transparent-256.png')
   acn_logobox = OffsetImage(antclimnow_logo, zoom = 0.019)
   scar_logobox = OffsetImage(scar_logo, zoom =0.022)
-  #nerc_logobox = OffsetImage(nerc_logo, zoom = 0.05)
   bas_logobox = OffsetImage(bas_logo, zoom = 0.09)
   ab1 = AnnotationBbox(acn_logobox, (.73,1.055), xycoords = 'axes fraction', frameon= False)
   ab2 = AnnotationBbox(scar_logobox, (.83,1.05), xycoords = 'axes fraction', frameon= False)
-  #ab3 = AnnotationBbox(nerc_logobox, (.93,0.05), xycoords = 'axes fraction', frameon= False)
   ab4 = AnnotationBbox(bas_logobox, (1,1.055), xycoords = 'axes fraction', frameon= False)
   ax.add_artist(ab1)
   ax.add_artist(ab2)
-  #ax.add_artist(ab3)
   ax.add_artist(ab4)
   plt.axis('off')
   for i in range(0, nsource):
@@ -969,30 +891,15 @@ if mean_period == 'seasonal':
       ### Save files of the time series shown in the seasonal plots
       iris.save(diag_plt_xsea, 't_srs/data4figs/aci_'+diag_name+'_'+seasons_arr[k]+'_v'+aci_version_num+'.nc')
       ax=plt.subplot(2,2,k+1)
-    #  ax.axhline(0, color = '0.8', linewidth = 0.7)
       ylim_diag = yrange_calc(diag_plt_xsea)
       if (diag_name == 'SMB_all'): ylim_diag[0] = 0
       if diag_name == 'SMB_all': ylim_diag[1] = ylim_diag[1]+100
-      #linestyle='-', color = '#296e31', label = 'ERA5', linewidth = 0.8, alpha =0.8)
-      #line1, = iplt.plot(diag_plt, color='#296e31', linewidth = 0.8, alpha = 0.8, label = source_lab)
       iplt.plot(diag_plt_xsea, color=seasons_colr[k], linewidth = 1.5, alpha = 0.8, label = source_lab[i], linestyle = linestyle_dset_arr[i])
-    #  iplt.plot(diag_plt_xsea, linestyle='-', color = seasons_colr[k], linewidth = 0.8, alpha = 0.6)
-    #  xy = (.9, .1) # Annotation position (in axis fraction coordinates). 
-    #  ax.plot(xy[0], xy[1])
-      #ax.plot(jsi_sh_djf.data)
-      # Annotate the 1st position with a text box ('Test 1')
-      #arr_img = plt.imread('plotting_info/AntClimNow_logo_15cm_300dpi.png')
-      ##imagebox = OffsetImage(arr_img, zoom=0.02)
-      #imagebox.image.axes = ax
-      #ab = AnnotationBbox(imagebox, xy, xycoords='axes fraction', frameon=False)
-      #ax.add_artist(ab)
       ax.set_ylim(ylim_diag)
       if (k == 2) or (k == 3): ax.set_xlabel('Year', size=14)
       if (k == 0) or (k == 2): ax.set_ylabel(ylab_units, size=14)
       #ax.set_title(p_title, size=4)
       ax.text(.1,.9, seasons_arr_plt[k]+': '+seas_names.get(seasons_arr[k]), transform=ax.transAxes, color=seasons_colr[k], size = 14)
-      #if (k == 0): ax.text(.95, 0.95, 'ERA5', transform=ax.transAxes, fontweight = 'book', color='silver', fontsize=16,
-	    #bbox=dict(fc="none", ec='silver', linewidth = 0.5))
       ax.xaxis.set_tick_params(labelsize=10)
       ax.yaxis.set_tick_params(labelsize=10)
       ax.xaxis.set_major_locator(YearLocator(10, month=1, day=15)) # select day 2, otherwise the formatting can give the wrong year at at the year boundary (e.g. 1989 instead of 1990). 
@@ -1006,79 +913,4 @@ if mean_period == 'seasonal':
   fname_plt = fname_plt = 'aci_'+diag_name+'_seasonal_v'+aci_version_num+'_'+plt_date  
   plt.savefig('plots/'+fname_plt+'.png')
   plt.close()
-
-########################## Annual ################################ 
-#if mean_period == 'annual': 
-##  diag_plt_seaclim=diag_plt_season.aggregated_by('clim_season', iris.analysis.MEAN)
-  #plt.figure(figsize=(7, 4), dpi=300)  
-##  ax.axhline(0, color = '0.8', linewidth = 0.7, alpha=1)
-  #for i in range(0,nsource):
-    #cube_plt=diag_plt
-    #diag_plt_ann=diag_plt[i].aggregated_by('year', iris.analysis.MEAN)
-    #lastyr = max(diag_plt[i].coord('year').points)
-    #firstyr = min(diag_plt[i].coord('year').points)
-    #nyrs = lastyr-firstyr +1
-    #years = firstyr+np.arange(nyrs)
-    #iplt.plot(diag_plt[i], color=color_dset_arr_sm[i], linestyle = linestyle_dset_arr[i], linewidth = 1.6, label = source_lab[i])
-    
-  ##  iplt.plot(diag_plt, linestyle='-', color = 'blue', linewidth = 0.8, alpha = 0.6)
-    
-  #xy = (.9, .1) # Annotation position (in axis fraction coordinates). 
-  #ax.plot(xy[0], xy[1])
-  ## Annotate the 1st position with a text box ('Test 1')
-  #antclimnow_logo = plt.imread('plotting_info/AntClimNow_logo_15cm_300dpi.png')
-  #scar_logo = plt.imread('plotting_info/SCAR_logo_2018_white_background.png')
-  ##nerc_logo = plt.imread('plotting_info/NERC_logo_black_no_background.png')
-  #bas_logo = plt.imread('plotting_info/bas-logo-default-transparent-256.png')
-  ##acn_logobox = OffsetImage(antclimnow_logo, zoom = 0.02)
-  ##scar_logobox = OffsetImage(scar_logo, zoom =0.027)
-  ###nerc_logobox = OffsetImage(nerc_logo, zoom = 0.05)
-  ##bas_logobox = OffsetImage(bas_logo, zoom = 0.09)
-  ##ab1 = AnnotationBbox(acn_logobox, (.85,1), xycoords = 'axes fraction', frameon= False)
-  ##ab2 = AnnotationBbox(scar_logobox, (0.1,1), xycoords = 'axes fraction', frameon= False)
-  ###ab3 = AnnotationBbox(nerc_logobox, (.93,0.05), xycoords = 'axes fraction', frameon= False)
-  ##ab4 = AnnotationBbox(bas_logobox, (.9,0.07), xycoords = 'axes fraction', frameon= False)
-  #acn_logobox = OffsetImage(antclimnow_logo, zoom = 0.015)
-  #scar_logobox = OffsetImage(scar_logo, zoom =0.016)
-  ##nerc_logobox = OffsetImage(nerc_logo, zoom = 0.05)
-  #bas_logobox = OffsetImage(bas_logo, zoom = 0.07)
-  #ab1 = AnnotationBbox(acn_logobox, (.73,1.055), xycoords = 'axes fraction', frameon= False)
-  #ab2 = AnnotationBbox(scar_logobox, (.83,1.05), xycoords = 'axes fraction', frameon= False)
-  ##ab3 = AnnotationBbox(nerc_logobox, (.93,0.05), xycoords = 'axes fraction', frameon= False)
-  #ab4 = AnnotationBbox(bas_logobox, (1,1.055), xycoords = 'axes fraction', frameon= False)
- 
-  #ax.add_artist(ab1)
-  #ax.add_artist(ab2)
-  ##ax.add_artist(ab3)
-  #ax.add_artist(ab4)
-  #ax.set_ylim(ylim_diag)
-  #ax.set_xlabel('Year', size=10)
-  #ax.xaxis.set_major_locator(YearLocator(5, month=1, day=2)) # select day 2, otherwise the formatting can give the wrong year at at the year boundary (e.g. 1989 instead of 1990). 
-  #formatter = nc_time_axis.CFTimeFormatter("%Y", "gregorian")
-  #ax.xaxis.set_major_formatter(formatter)
-  #ax.set_ylabel('Monthly anomaly ('+ylab_units+')', size=10)
-  #ax.set_title(p_title+'\n ('+aci_version+')', size=10)
-  ##ax.text(.1,.9, season, transform=ax.transAxes)
-  #ax.xaxis.set_tick_params(labelsize=8)
-  #ax.yaxis.set_tick_params(labelsize=8)
-  #ax.legend(fontsize=8, loc='lower left', frameon=False)
-  #sns.despine() # remove plot borders 
-  #lyr = ax.get_children()
-  #countl=0
-  #for k in range(0, nsource+1, 2):
-    #print(k, countl)
-    #lyr[k].set_zorder(2*nsource-1-countl)
-    #lyr[k+1].set_zorder(0+countl)
-    #countl=countl+1
-  
-  ##lyr[0].set_zorder(3)
-  ##lyr[1].set_zorder(0)
-  ##lyr[2].set_zorder(2)
-  ##lyr[3].set_zorder(1)
-  ##lyr[4]
-  ##lyr[5]
-  ###plt.show) 
-  #fname_plt = diag_name+'_full_tsrs_'+vn
-  #plt.savefig('plots/'+fname_plt+'.png')
-  #plt.close()
 
