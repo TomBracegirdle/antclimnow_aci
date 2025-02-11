@@ -144,12 +144,12 @@ update_data = float(sys.argv[3])
 aci_version_num = '1.0'
 aci_version = 'ACI beta v'+aci_version_num
 nsource = 1 ## default number of data sources is one
-plt_date = '20240612'
+plt_date = '20250210'
 
 if diag_name == 't2m_ERA5':
   sea_agg_calc = 1
   sea_agg_type_in = 'mean'
-  vn='20250121'
+  vn='20250206'
   fname = diag_name+'_monthly_'+vn+'.nc'
   diag_in = iris.load_cube('t_srs/t2m/'+fname,'area_weighted_time_series')
   diag_plt = iris.cube.CubeList()
@@ -863,7 +863,7 @@ if mean_period == 'monthly':
       #line1, = iplt.plot(diag_plt, color='#296e31', linewidth = 0.8, alpha = 0.8, label = source_lab)
     #  iplt.plot(diag_plt, color='#296e31', linewidth = 0.8, label = source_lab)
       iplt.plot(diag_plt[i], color=color_dset_arr[i], linestyle = linestyle_dset_arr[i], linewidth = 0.8)
-      iplt.plot(diag_plt_sm, color=color_dset_arr_sm[i], linestyle = linestyle_dset_arr[i], linewidth = 1.6, label = source_lab[i]+' (2-year smoothing)')
+      iplt.plot(diag_plt_sm, color=color_dset_arr_sm[i], linestyle = linestyle_dset_arr[i], linewidth = 1.6, label = source_lab[i]+' (12-month running mean)')
       iris.save(diag_plt[i], 't_srs/data4figs/aci_'+diag_name+'_monthly_anom_v'+aci_version_num+'.nc')
       iris.save(diag_plt_sm, 't_srs/data4figs/aci_'+diag_name+'_sm_monthly_anom_v'+aci_version_num+'.nc')
     else:
@@ -928,7 +928,7 @@ if mean_period == 'monthly':
   #lyr[4]
   #lyr[5]
   #plt.show() 
-  fname_plt = 'aci_'+diag_name+'_monthly_anom_v'+aci_version_num
+  fname_plt = 'aci_'+diag_name+'_monthly_anom_v'+aci_version_num+'_'+plt_date
   plt.savefig('plots/'+fname_plt+'.png')
   plt.close()
 
@@ -1003,7 +1003,7 @@ if mean_period == 'seasonal':
       plt.suptitle(p_title+'\n ('+aci_version+')')
     
   #plt.show() 
-  fname_plt = fname_plt = 'aci_'+diag_name+'_seasonal_v'+aci_version_num  
+  fname_plt = fname_plt = 'aci_'+diag_name+'_seasonal_v'+aci_version_num+'_'+plt_date  
   plt.savefig('plots/'+fname_plt+'.png')
   plt.close()
 
